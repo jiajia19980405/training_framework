@@ -18,8 +18,8 @@ class SampleGenerator(object):
         sample = []
         return sample
 
-    def generateNegSample(self, pos_sample:list)
-        sample =
+    def generateNegSample(self, pos_sample:list):
+
 
     def generate(self):
         samples = []
