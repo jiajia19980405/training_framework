@@ -7,4 +7,5 @@ if cofg['polynomial_sample_size'] != 0 and cofg['item_frequency_dict_path']:
     FrequenceDict = file_utils.read_json(cofg['item_frequency_dict_path'])
 
 IndexDict = None
-if cofg['random_neg_sampel_size'] != 0 and cofg['item_index_dict_path']:
+if cofg['item_index_dict_path']:
+    IndexDict = file_utils.read_line_dict(cofg['item_index_dict_path'], 3)

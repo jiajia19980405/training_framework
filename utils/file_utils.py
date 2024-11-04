@@ -9,6 +9,13 @@ def read_line_dict(file_path, num:int = 3):
     with open(file_path, 'r') as f:
         lis = f.readlines()
 
+    res = []
+    cannot_parse_lis = []
     for i in range(len(lis)):
+        line = lis[i].split('\t')
+        if len(line) == num:
+            res.append(line)
+        else:
+            cannot_parse_lis.append(lis[i])
+    return res, cannot_parse_lis
 
-    return [l.split('\t') for l in lis if len(l.split('\t')) == num]
