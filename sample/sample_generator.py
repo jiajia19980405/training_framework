@@ -6,18 +6,20 @@
     hash slot   slotid -- fea_attr1,fea_attr2,fea_attr3
     embed slot  slotid -- 1.02,2.03..(emb_length)
 '''
-from distutils.command.config import config
-SPLIT_1 = config['lv1_split']
-SPLIT_2 = config['lv2_split']
-import simplejson as json
 from . import generator_config
+SPLIT_1 = generator_config['lv1_split']
+SPLIT_2 = generator_config['lv2_split']
+import simplejson as json
+
 class Sample:
     def __init__(self):
         self.label = {}
         self.feature = {} #slot_id:fea
 
-    def format(self):
-        label_str =
+    def format(self, lines:list):
+        index_lis = [(lines.index(k), v)for k,v in self.label.items() if k in lines]
+        index_lis.sort(key=lambda x:x[0])
+        label_str = ';'.join(['{}:{}'.format(k,v) for k,v in index_lis])
         return SPLIT_1.join([])
 
 
@@ -31,12 +33,13 @@ class SampleGenerator(object):
         return sample
 
     def generateNegSample(self, pos_sample:list):
-
+        neg_sample = []
+        return neg_sample
 
     def generate(self):
         samples = []
-        samples = generatePosSample()
-        samples = generateNegSample()
+        samples = self.generatePosSample()
+        samples = self.generateNegSample(samples)
         return samples
 
 
