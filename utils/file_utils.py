@@ -18,4 +18,3 @@ def read_line_dict(file_path, num:int = 3):
         else:
             cannot_parse_lis.append(lis[i])
     return res, cannot_parse_lis
-
