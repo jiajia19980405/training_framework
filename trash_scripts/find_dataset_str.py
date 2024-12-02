@@ -2,7 +2,7 @@ import json
 import os
 from tqdm import tqdm
 import fitz
-from collections import Counter
+
 '''
 S1 拿到目录 -- 只要页码
 S2 对每一篇检索 dataset/ data set 关键字，记录出现的页码，去重
@@ -11,10 +11,11 @@ S4 保存，导出一个json
 '''
 
 
-def handle_book(path, book_name, year, mark = 'sec'):
+def handle_book(path, book_name, year, mark='sec'):
     pdf = fitz.open(path + '/' + book_name)
-    papers_cate = []
+    papers_cate = json.loads(open(path + '/' + book_name + '_res_papers/final_contains.json','r+').read())
     err_titles = []
+
     def binary_search(number, lis):
         left, right = 0, len(lis) - 1
         while left <= right:
@@ -27,7 +28,7 @@ def handle_book(path, book_name, year, mark = 'sec'):
                 left = mid + 1
         return -1
 
-    def single_layer_get(bookmark_list, year, mark = 'sec'):
+    def single_layer_get(bookmark_list, year, mark='sec'):
         lis = []
         for level, title, page in bookmark_list:
             if title.startswith(mark + year + '-'):
@@ -53,8 +54,7 @@ def handle_book(path, book_name, year, mark = 'sec'):
         except Exception as e:
             err_titles.append(title)
 
-    #kw = ['dataset', 'data set', 'database']
-    kw = ['database']
+    kw = ['dataset', 'data set', 'andro-zoo database','cve database','mnist database','vulnerability database', 'ip2location database', 'maxmind database','geolocation database','nationalvulnerability database','netacuityedge database','election database','bluetoothsniffing database','mib database','jpegfile database','lfw database','forchheim database','dresden database','alaska2 database','pyroomacoustics database','acousticalsound database','ip2proxy database']
 
     # S1 拿到所有起始页面
     book_marks = pdf.get_toc()
@@ -65,28 +65,26 @@ def handle_book(path, book_name, year, mark = 'sec'):
     # S2 保存含有dataset / data set的页码
     start_page = papers_start_pages[0]
     founds = []
-    news = []
+    full_texts = []
     print('start to find in each paper\n')
+    switch = False
     for page in tqdm(list(range(start_page, papers_start_pages[-1]))):
         this_page_text = pdf.get_page_text(page).replace('\n', '').lower()
-        for it in kw:
-            if it in this_page_text:
-                founds.append(page)
-                words = this_page_text.split(' ')
-                for i,word in enumerate(words):
-                    if word == it:
-                        news.append(words[i - 1] + ' ' + words[i])
-                break
-    print(len(founds))
-    print(founds)
-    print(news)
-    return founds, news
+        if page in papers_start_pages:
+            switch = True
+            this_page_text = this_page_text[max(this_page_text.find('introduction'),0):] #过滤标题
+        elif 'references' in this_page_text:
+            switch = False
+        if switch:
+            for it in kw:
+                if it in this_page_text:
+                    founds.append(page)
+                    break
 
     if not os.path.exists(path + '/' + book_name + '_res_papers'):
         os.makedirs(path + '/' + book_name + '_res_papers')
 
     # S3 判断区间
-    #print('start_save\n')
     for page in founds:
         index = binary_search(page, papers_start_pages)
         get_paper_obj(index, papers_start_pages, papers_cate, starts=papers_start_pages[0], err_titles=err_titles)
@@ -98,21 +96,12 @@ def handle_book(path, book_name, year, mark = 'sec'):
     with open(path + '/' + book_name + '_res_papers/final_err.json', 'w+') as f:
         f.write(json.dumps(err_titles))
 
-    print('{} has {} papers contains the kw'.format(book_name, len(papers_cate)))
+    print('{} has {}/{} papers contains the kw'.format(book_name, len(papers_cate), len(papers_start_pages) - 1))
 
-#book_names = ['sec24_full_proceedings.pdf']
 years = [str(20 + i) for i in range(5)]
-counter = Counter([])
 book_names = ['sec20_full_proceedings.pdf', 'sec21_full_proceedings.pdf', 'sec22_full_proceedings.pdf', 'sec23_full_proceedings.pdf', 'sec24_full_proceedings.pdf']
 for i, book_name in enumerate(book_names):
     if years[i] == '24':
-        founds, news = handle_book('/Users/dla/Downloads/', book_name, years[i], mark = 'usenixsecurity')
-        counter += Counter(news)
+        handle_book('/Users/admin/Downloads', book_name, years[i], mark='usenixsecurity')
     else:
-        founds, news = handle_book('/Users/dla/Downloads/', book_name, years[i])
-        counter += Counter(news)
-
-with open('/Users/dla/Downloads/counter.json', 'w+') as f:
-    f.write(json.dumps(counter))
-print(counter)
-
+        handle_book('/Users/admin/Downloads', book_name, years[i])
